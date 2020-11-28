@@ -72,7 +72,7 @@ private:
 	void StartShake();
 	void TileSpawnTick();
 	bool BruteForceSpawn();
-	bool SpawnTile(int32 X, int32 Y);
+	bool SpawnTile(int32 X, int32 Y, bool BruteForceFlag);
 	int32 GetIndex(int32 X, int32 Y) const;
 
 };

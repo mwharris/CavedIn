@@ -18,6 +18,7 @@ ABaseCharacter::ABaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	CanAttack = true;
+	AttackHeld = false;
 
 	PickaxeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Pickaxe Mesh"));
 	PickaxeMesh->SetupAttachment(RootComponent);
@@ -37,6 +38,8 @@ void ABaseCharacter::BeginPlay()
 	{
 		PlayerControllerRef->bShowMouseCursor = true;
 	}
+	// Setup our pickaxe attack timeline
+	SetupTimeline();
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -44,21 +47,42 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("MoveUp", this, &ABaseCharacter::MoveUp);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
-	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Pressed, this, &ABaseCharacter::Attack);
+	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Pressed, this, &ABaseCharacter::AttackPressed);
+	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Released, this, &ABaseCharacter::AttackReleased);
 	PlayerInputComponent->BindAction("Restart", EInputEvent::IE_Pressed, this, &ABaseCharacter::RestartLevel);
+}
+
+void ABaseCharacter::SetupTimeline() 
+{
+	// Timeline will call this function when it's running
+	FOnTimelineFloat TimelineCallback;
+	TimelineCallback.BindUFunction(this, FName(TEXT("ControlAttack")));
+	// Timeline will call this function when it's completed running
+	FOnTimelineEventStatic TimelineFinishedCallback;
+	TimelineFinishedCallback.BindUFunction(this, FName(TEXT("SetAttackState")));
+	// Setup the timeline to call the above functions 
+	AttackTimeline.AddInterpFloat(AttackCurve, TimelineCallback);
+	AttackTimeline.SetTimelineFinishedFunc(TimelineFinishedCallback);
 }
 
 void ABaseCharacter::Tick(float DeltaTime) 
 {
+	// Tick our attack timeline if it's running
+	if (!CanAttack)
+	{
+		AttackTimeline.TickTimeline(DeltaTime);
+	}
+	// Perform a raycast under our mouse to find our mouse location in the world
 	if (PlayerControllerRef) 
 	{
-		// Perform a raycast under our mouse to find our mouse location in the world
 		FHitResult TraceHitResult;
 		PlayerControllerRef->GetHitResultUnderCursor(ECC_Visibility, false, TraceHitResult);
 		FVector HitLocation = TraceHitResult.ImpactPoint;
 		// Rotate the player towards this location
 		Rotate(HitLocation);
 	}
+	// Tick our Attack if we're currently attacking
+	Attack();
 }
 
 void ABaseCharacter::MoveUp(float AxisValue) 
@@ -82,30 +106,29 @@ void ABaseCharacter::Rotate(FVector LookAtTarget)
 	PlayerControllerRef->SetControlRotation(Rotator);
 }
 
-void ABaseCharacter::Attack()
+void ABaseCharacter::Attack() 
 {
-	if (CanAttack) 
+	if (!CanAttack || !AttackHeld) { return; }
+	CanAttack = false;
+	// Start the attack animation timeline
+	AttackTimeline.PlayFromStart();
+	// Make sure we get a reference to our owner
+	AActor* MyOwner = GetOwner();
+	if (!MyOwner)
 	{
-		CanAttack = false;
-		GetWorldTimerManager().SetTimer(AttackTimer, this, &ABaseCharacter::ResetAttack, AttackRateSeconds, false);
-		// Make sure we get a reference to our owner
-		AActor* MyOwner = GetOwner();
-		if (!MyOwner)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Attack: No Owner Found!"));
-			return;
-		}
-		// Do a simple raycast attack forward for now
-		FVector Start = GetActorLocation();
-		FVector End = GetActorLocation() + (GetActorForwardVector() * AttackDistance);
-		FHitResult OutHit;
-		bool Success = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
-		if (Success && OutHit.GetActor() != NULL && OutHit.GetActor() != this)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SparksSystem, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
-			UGameplayStatics::SpawnSoundAtLocation(this, AttackSound, GetActorLocation());
-			UGameplayStatics::ApplyDamage(OutHit.GetActor(), AttackDamage, MyOwner->GetInstigatorController(), this, DamageType);
-		}
+		UE_LOG(LogTemp, Error, TEXT("Attack: No Owner Found!"));
+		return;
+	}
+	// Do a simple raycast attack forward for now
+	FVector Start = GetActorLocation();
+	FVector End = GetActorLocation() + (GetActorForwardVector() * AttackDistance);
+	FHitResult OutHit;
+	bool Success = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
+	if (Success && OutHit.GetActor() != NULL && OutHit.GetActor() != this)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SparksSystem, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
+		UGameplayStatics::SpawnSoundAtLocation(this, AttackSound, GetActorLocation());
+		UGameplayStatics::ApplyDamage(OutHit.GetActor(), AttackDamage, MyOwner->GetInstigatorController(), this, DamageType);
 	}
 }
 
@@ -140,14 +163,36 @@ void ABaseCharacter::ApplyDamageToFinalBlock(ACaveTile* FinalBlock)
 	}
 }
 
-void ABaseCharacter::ResetAttack() 
+void ABaseCharacter::ControlAttack() 
+{
+	FVector Location = GetActorLocation();
+	// Get the current time value
+	TimelineValue = AttackTimeline.GetPlaybackPosition();
+	// Get the current float value from the timeline using the time value above
+	CurveFloatValue = AttackCurve->GetFloatValue(TimelineValue);
+	// Set our new location given the timeline values
+	FRotator CurrRotation = PickaxeMesh->GetRelativeRotation();
+	FRotator NewRotation = FRotator(CurveFloatValue, CurrRotation.Yaw, CurrRotation.Roll);
+	PickaxeMesh->SetRelativeRotation(NewRotation);
+}
+
+void ABaseCharacter::SetAttackState() 
 {
 	CanAttack = true;
 }
 
+void ABaseCharacter::AttackPressed()
+{
+	AttackHeld = true;
+}
+
+void ABaseCharacter::AttackReleased() 
+{
+	AttackHeld = false;
+}
+
 void ABaseCharacter::RestartLevel() 
 {
-	if (!GameModeRef->GetIsGameOver()) { return; }
 	UGameplayStatics::OpenLevel(GetWorld(), "Level1", true);
 }
 

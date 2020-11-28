@@ -16,10 +16,6 @@ void AWinTriggerBox::BeginPlay()
     Super::BeginPlay();
     // Get a reference to the GameMode
     GameModeRef = Cast<ACaveInGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-    if (!GameModeRef)
-    {
-        UE_LOG(LogTemp, Error, TEXT("WinTriggerBoX: Can't find GameMode!"));
-    }
     // Draw our trigger box
     DrawDebugBox(GetWorld(), GetActorLocation(), GetComponentsBoundingBox().GetExtent(), FColor::Yellow, true, -1, 0, 5);
 }

@@ -39,13 +39,18 @@ public:
 	float AttackRateSeconds = 1;
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	TSubclassOf<UDamageType> DamageType;
+	UPROPERTY(EditAnywhere, Category="Attack")
+	UCurveFloat* AttackCurve;
 	UPROPERTY(EditAnywhere, Category="Effects")
 	UParticleSystem* ExplosionParticle;
 	UPROPERTY(EditAnywhere, Category="Effects")
 	UNiagaraSystem* SparksSystem;
 
+
 	UFUNCTION()
-	void ResetAttack();
+	void ControlAttack();
+	UFUNCTION()
+	void SetAttackState();	
 	UFUNCTION()
 	void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -66,11 +71,17 @@ private:
 	APlayerController* PlayerControllerRef;
 	ACaveInGameMode* GameModeRef;
 	FTimerHandle AttackTimer;
-	bool CanAttack = true;
+	bool CanAttack;
+	bool AttackHeld;
+	float CurveFloatValue;
+	float TimelineValue;
+	FTimeline AttackTimeline;
 
 	void MoveUp(float AxisValue);
 	void MoveRight(float AxisValue);
 	void Attack();
+	void AttackPressed();
+	void AttackReleased();
 	void Rotate(FVector LookAtTarget);
 	void RestartLevel();
 	void SetupTimeline();

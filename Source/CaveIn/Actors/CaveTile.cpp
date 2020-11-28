@@ -92,6 +92,7 @@ void ACaveTile::Tick(float DeltaTime)
 // Called while the FallTimeline is running
 void ACaveTile::ControlFall() 
 {
+	UE_LOG(LogTemp, Warning, TEXT("ControlFall!"));
 	FVector Location = GetActorLocation();
 	// Get the current time value
 	TimelineValue = MyTimeline.GetPlaybackPosition();

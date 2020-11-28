@@ -67,7 +67,7 @@ void ACaveInGameMode::TileSpawnTick()
         int32 X = FMath::RandRange(0, NumTilesX - 1);
         int32 Y = FMath::RandRange(0, NumTilesY - 1);
         // Attempt to spawn this tile at a random location
-        if (SpawnTile(X, Y))
+        if (SpawnTile(X, Y, false))
         {
             TilesToGenerate--;
         }
@@ -81,13 +81,7 @@ void ACaveInGameMode::TileSpawnTick()
             else
             {
                 SafetyCounter--;
-                UE_LOG(LogTemp, Error, TEXT("Brute Force Failed!"));
             }
-        }
-        // Make sure we log when this happens for bookkeeping
-        if (SafetyCounter == 0) 
-        {
-            UE_LOG(LogTemp, Error, TEXT("Hit the Safety Counter!"));
         }
     }
     // Check if the player got Caved In
@@ -107,7 +101,6 @@ bool ACaveInGameMode::BruteForceSpawn()
     // Loop through the Tiles array from the middle->end
     if (!MiddleToEndFilled)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Brute Forcing, Middle->End..."));
         for (size_t Index = (Tiles.Num()/2); Index < Tiles.Num(); Index++) 
         {
             // Find the first empty spot
@@ -115,15 +108,13 @@ bool ACaveInGameMode::BruteForceSpawn()
                 // Determine X and Y values
                 int32 X = Index % NumTilesX;
                 int32 Y = FMath::DivideAndRoundDown<int32>(Index, NumTilesX);
-                UE_LOG(LogTemp, Warning, TEXT("Successful!"));
                 // Attempt to spawn, return results
-                return SpawnTile(X, Y);
+                return SpawnTile(X, Y, true);
             }
         }
         MiddleToEndFilled = true;
     }
     // Loop through the Tiles array from the middle->beginning
-    UE_LOG(LogTemp, Warning, TEXT("Brute Forcing, Middle->Start..."));
     for (size_t Index = (Tiles.Num()/2); Index >= 0; Index--) 
     {
         // Find the first empty spot
@@ -131,16 +122,15 @@ bool ACaveInGameMode::BruteForceSpawn()
             // Determine X and Y values
             int32 X = Index % NumTilesX;
             int32 Y = FMath::DivideAndRoundDown<int32>(Index, NumTilesX);
-            UE_LOG(LogTemp, Warning, TEXT("Successful!"));
             // Attempt to spawn, return results
-            return SpawnTile(X, Y);
+            return SpawnTile(X, Y, true);
         }
     }
     return false;
 }
 
 // Attempt to spawn a tile at a given X and Y location
-bool ACaveInGameMode::SpawnTile(int32 X, int32 Y) 
+bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag) 
 {
     int32 Index = GetIndex(X, Y);
     // Randomly make certain tiles indestructible
@@ -149,7 +139,7 @@ bool ACaveInGameMode::SpawnTile(int32 X, int32 Y)
     if (Index != 4 && Index != 5) 
     {
         int32 RandomNumber = FMath::RandRange(1, 100);
-        if (RandomNumber <= 20) { Indestructible = true; }
+        if ((BruteForceFlag && RandomNumber <= 5) || (!BruteForceFlag && RandomNumber <= 15)) { Indestructible = true; }
         if (RandomNumber >= 80) { IsBomb = true; }
     }
     // Actually create the tile and update Tiles array
@@ -208,17 +198,14 @@ void ACaveInGameMode::ActorDied(AActor* DeadActor)
 
 void ACaveInGameMode::HandleGameOver(bool PlayerWon) 
 {
-    if (!IsGameOver) 
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Game Over!"));
-        // Clear timers
-        GetWorldTimerManager().ClearTimer(TileTimerHandle);
-        // Mark us as having won or lost
-        IsGameOver = true;
-        PlayerWin = PlayerWon;
-        // Call Blueprints to show widgets accordingly
-        GameOver(PlayerWin);
-    }
+    if (IsGameOver) { return; }
+    // Clear timers
+    GetWorldTimerManager().ClearTimer(TileTimerHandle);
+    // Mark us as having won or lost
+    IsGameOver = true;
+    PlayerWin = PlayerWon;
+    // Call Blueprints to show widgets accordingly
+    GameOver(PlayerWin);
 }
 
 int32 ACaveInGameMode::GetIndex(int32 X, int32 Y) const
