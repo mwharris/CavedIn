@@ -36,6 +36,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ACaveTile> TileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AActor> TestTileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	int32 NumTilesX = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	int32 NumTilesY = 10;
@@ -60,6 +62,10 @@ private:
 	USoundBase* EarthquakeSound;
 	UAudioComponent* EarthquakeAudio;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Final Block Spawning", meta = (AllowPrivateAccess = "true"))
+	float FinalBlockSpawnDelay = 1.0f;
+	FTimerHandle ExitSpawnTimerHandle;
+
 	TArray<ACaveTile*> Tiles;
 	ACaveTile* FinalBlockRef;
 	ABaseCharacter* PlayerRef;
@@ -69,6 +75,7 @@ private:
 	bool PlayerWin;
 	bool MiddleToEndFilled;
 
+	void SpawnFinalBlock();
 	void StartShake();
 	void TileSpawnTick();
 	bool BruteForceSpawn();

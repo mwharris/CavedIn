@@ -16,19 +16,39 @@ void ACaveInGameMode::BeginPlay()
         MiddleToEndFilled = false;
         // Initialize Tiles with nullptrs
         Tiles.Init(nullptr, NumTilesY * NumTilesX);
-        // Spawn our final block
-        FTransform Transform;
-        Transform.SetLocation(FinalBlockLocation);
-        Transform.SetRotation(FRotator::ZeroRotator.Quaternion());
-        Transform.SetScale3D(FVector(2, 2, 2));
-        FinalBlockRef = GetWorld()->SpawnActorDeferred<ACaveTile>(TileClass, Transform);
-        FinalBlockRef->SetIndestructible(false);
-        FinalBlockRef->SetIsFinalBlock(true);
-        FinalBlockRef->FinishSpawning(Transform);
         // Get a reference to our player character
         PlayerRef = Cast<ABaseCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         // Start our tile generation
-        GetWorldTimerManager().SetTimer(TileTimerHandle, this, &ACaveInGameMode::StartShake, 3, false);
+        // GetWorldTimerManager().SetTimer(TileTimerHandle, this, &ACaveInGameMode::StartShake, 3, false);
+        // Spawn our final block with a delay
+        GetWorldTimerManager().SetTimer(ExitSpawnTimerHandle, this, &ACaveInGameMode::SpawnFinalBlock, FinalBlockSpawnDelay, false);
+    }
+}
+
+// TODO: Fix this up to use GetWorld()->SpawnActor<>() properly
+void ACaveInGameMode::SpawnFinalBlock() 
+{
+    /*
+    FTransform Transform;
+    Transform.SetLocation(FinalBlockLocation);
+    Transform.SetRotation(FRotator::ZeroRotator.Quaternion());
+    Transform.SetScale3D(FVector(2, 2, 2));
+    FinalBlockRef = GetWorld()->SpawnActorDeferred<ACaveTile>(TileClass, Transform);
+    FinalBlockRef->SetIndestructible(false);
+    FinalBlockRef->SetIsFinalBlock(true);
+    FinalBlockRef->FinishSpawning(Transform);
+    */
+
+    FActorSpawnParameters params;
+    FVector Loc = FVector(860.0, 380.0, 320.0);
+    AActor* Actor = GetWorld()->SpawnActor<AActor>(TileClass, Loc, FRotator::ZeroRotator, params);
+    if (Actor != nullptr) 
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Actor Spawned!"));
+    }
+    else 
+    {
+        UE_LOG(LogTemp, Error, TEXT("Actor Spawn FAILED!"));
     }
 }
 
@@ -146,6 +166,10 @@ bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag)
     if (Tiles[Index] == nullptr)
     {
         FVector Location = FVector(X * 200, Y * 200, SpawnHeight);
+        FRotator Rotation = FRotator::ZeroRotator;
+        
+        // TODO: Fix this up to use GetWorld()->SpawnActor<>() properly
+        /*
         FTransform Transform;
         Transform.SetLocation(Location);
         Transform.SetRotation(FRotator::ZeroRotator.Quaternion());
@@ -153,6 +177,13 @@ bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag)
         NewTile->SetIndestructible(Indestructible);
         NewTile->SetIsBombBlock(IsBomb);
         NewTile->FinishSpawning(Transform);
+        */
+
+        FActorSpawnParameters params;
+        ACaveTile* NewTile = GetWorld()->SpawnActor<ACaveTile>(TestTileClass, Location, Rotation, params);
+        NewTile->SetIndestructible(Indestructible);
+        NewTile->SetIsBombBlock(IsBomb);
+        
         Tiles[Index] = NewTile;
         NumFilledTiles++;
         return true;

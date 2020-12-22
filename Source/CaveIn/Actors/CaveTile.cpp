@@ -11,8 +11,8 @@
 ACaveTile::ACaveTile()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	Indestructible = false;
 	Falling = true;
+	Indestructible = false;
 	BombBlock = false;
 
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
@@ -27,38 +27,14 @@ ACaveTile::ACaveTile()
 	ExplosionPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Explosion Point"));
 	ExplosionPoint->SetupAttachment(RootComponent);
 
-	IndestructibleMaterial = CreateDefaultSubobject<UMaterial>("Indestructible Material");
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 }
 
 void ACaveTile::BeginPlay()
 {
 	Super::BeginPlay();
-	// Final Block gets it's own material
-	if (FinalBlock)
-	{
-		HealthComponent->SetDefaultHealth(HealthComponent->GetDefaultHealth() * FinalBlockHealthMultiplier);
-		HealthComponent->SetHealth(HealthComponent->GetHealth() * FinalBlockHealthMultiplier);
-		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(FinalBlockMaterial));
-	}
-	// Indestructible block cannot be destroyed, get a new material
-	else if (Indestructible) 
-	{
-		TextRenderer->DestroyComponent();
-		HealthComponent->SetIndestructible(true);
-		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(IndestructibleMaterial));
-	}
-	else if (BombBlock)
-	{
-		TextRenderer->DestroyComponent();
-		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(BombBlockMaterial));
-	}
-	else 
-	{
-		TextRenderer->DestroyComponent();
-	}
 	// Setup our falling timeline
-	SetupTimeline();
+	//SetupTimeline();
 }
 
 void ACaveTile::SetupTimeline() 
@@ -92,7 +68,6 @@ void ACaveTile::Tick(float DeltaTime)
 // Called while the FallTimeline is running
 void ACaveTile::ControlFall() 
 {
-	UE_LOG(LogTemp, Warning, TEXT("ControlFall!"));
 	FVector Location = GetActorLocation();
 	// Get the current time value
 	TimelineValue = MyTimeline.GetPlaybackPosition();
@@ -112,6 +87,38 @@ void ACaveTile::SetFallState()
 {
 	Falling = false;
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), SlamSound, GetActorLocation(), 0.5f);
+}
+
+void ACaveTile::SetIndestructible(bool Value) 
+{
+	Indestructible = Value;
+	if (Indestructible) 
+	{
+		TextRenderer->DestroyComponent();
+		HealthComponent->SetIndestructible(true);
+		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(IndestructibleMaterial));
+	}
+}
+
+void ACaveTile::SetIsBombBlock(bool Value) 
+{
+	BombBlock = Value;
+	if (BombBlock)
+	{
+		TextRenderer->DestroyComponent();
+		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(BombBlockMaterial));
+	}
+}
+
+void ACaveTile::SetIsFinalBlock(bool Value) 
+{
+	FinalBlock = Value;
+	if (FinalBlock)
+	{
+		HealthComponent->SetDefaultHealth(HealthComponent->GetDefaultHealth() * FinalBlockHealthMultiplier);
+		HealthComponent->SetHealth(HealthComponent->GetHealth() * FinalBlockHealthMultiplier);
+		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(FinalBlockMaterial));
+	}
 }
 
 void ACaveTile::HandleDestruction() 
@@ -139,19 +146,9 @@ bool ACaveTile::IsFalling() const
 	return Falling;
 }
 
-void ACaveTile::SetIndestructible(bool Value) 
-{
-	Indestructible = Value;
-}
-
 bool ACaveTile::GetIsBombBlock() const
 {
 	return BombBlock;
-}
-
-void ACaveTile::SetIsBombBlock(bool Value) 
-{
-	BombBlock = Value;
 }
 
 bool ACaveTile::GetIndestructible() const
@@ -162,9 +159,4 @@ bool ACaveTile::GetIndestructible() const
 bool ACaveTile::GetIsFinalBlock() const
 {
 	return FinalBlock;
-}
-
-void ACaveTile::SetIsFinalBlock(bool Value) 
-{
-	FinalBlock = Value;
 }

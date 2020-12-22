@@ -50,13 +50,14 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void HandleDestruction();
 	
+	void SetIsFinalBlock(bool Value);
+	void SetIndestructible(bool Value);
+	void SetIsBombBlock(bool Value);
+
 	// GETTERS AND SETTERS
 	bool GetIsFinalBlock() const;
-	void SetIsFinalBlock(bool Value);
 	bool GetIndestructible() const;
-	void SetIndestructible(bool Value);
 	bool GetIsBombBlock() const;
-	void SetIsBombBlock(bool Value);
 	float GetHealth() const;
 	void SetHealth(float Health);
 	bool IsDead() const;
