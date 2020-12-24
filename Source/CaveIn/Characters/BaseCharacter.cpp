@@ -50,6 +50,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Pressed, this, &ABaseCharacter::AttackPressed);
 	PlayerInputComponent->BindAction("Attack", EInputEvent::IE_Released, this, &ABaseCharacter::AttackReleased);
 	PlayerInputComponent->BindAction("Restart", EInputEvent::IE_Pressed, this, &ABaseCharacter::RestartLevel);
+	PlayerInputComponent->BindAction("Quit", EInputEvent::IE_Pressed, this, &ABaseCharacter::QuitGame);
 }
 
 void ABaseCharacter::SetupTimeline() 
@@ -194,6 +195,11 @@ void ABaseCharacter::AttackReleased()
 void ABaseCharacter::RestartLevel() 
 {
 	UGameplayStatics::OpenLevel(GetWorld(), "Level1", true);
+}
+
+void ABaseCharacter::QuitGame() 
+{
+	UGameplayStatics::OpenLevel(GetWorld(), "SplashScreen", true);
 }
 
 float ABaseCharacter::GetHealth() const

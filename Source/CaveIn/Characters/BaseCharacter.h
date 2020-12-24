@@ -84,6 +84,7 @@ private:
 	void AttackReleased();
 	void Rotate(FVector LookAtTarget);
 	void RestartLevel();
+	void QuitGame();
 	void SetupTimeline();
 
 };

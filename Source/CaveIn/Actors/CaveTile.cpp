@@ -34,7 +34,7 @@ void ACaveTile::BeginPlay()
 {
 	Super::BeginPlay();
 	// Setup our falling timeline
-	//SetupTimeline();
+	SetupTimeline();
 }
 
 void ACaveTile::SetupTimeline() 
@@ -118,6 +118,10 @@ void ACaveTile::SetIsFinalBlock(bool Value)
 		HealthComponent->SetDefaultHealth(HealthComponent->GetDefaultHealth() * FinalBlockHealthMultiplier);
 		HealthComponent->SetHealth(HealthComponent->GetHealth() * FinalBlockHealthMultiplier);
 		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(FinalBlockMaterial));
+	}
+	else 
+	{
+		TextRenderer->DestroyComponent();
 	}
 }
 

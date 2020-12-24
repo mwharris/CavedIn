@@ -36,8 +36,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ACaveTile> TileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AActor> TestTileClass;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	int32 NumTilesX = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	int32 NumTilesY = 10;
