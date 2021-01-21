@@ -1,4 +1,5 @@
 #include "HealthComponent.h"
+#include "CaveIn/Actors/CaveTile.h"
 #include "CaveIn/GameModes/CaveInGameMode.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
@@ -29,6 +30,13 @@ void UHealthComponent::TakeDamage(AActor* DamagedActor, float Damage, const UDam
 	{
 		GameModeRef->ActorDied(GetOwner());
 	} 
+	else if (ACaveTile* HitTile = Cast<ACaveTile>(DamagedActor))
+	{
+		if (HitTile->GetIsFinalBlock())
+		{
+			HitTile->UpdateDisplayedHealth(Health);
+		}
+	}
 }
 
 float UHealthComponent::GetHealth() const

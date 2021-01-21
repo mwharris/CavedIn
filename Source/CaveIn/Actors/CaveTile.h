@@ -47,12 +47,13 @@ public:
 	void SetFallState();
 
 	ACaveTile();
-	virtual void Tick(float DeltaTime) override;
 	void HandleDestruction();
 	
 	void SetIsFinalBlock(bool Value);
 	void SetIndestructible(bool Value);
 	void SetIsBombBlock(bool Value);
+	void StartFalling();
+	void UpdateDisplayedHealth(float Health);
 
 	// GETTERS AND SETTERS
 	bool GetIsFinalBlock() const;
@@ -69,6 +70,8 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	float StopZ = 100;
+	UPROPERTY(EditAnywhere, Category="Fall Properties")
+	float FallTimerFrequency = 0.2f;
 
 	bool FinalBlock;
 	bool Indestructible;
@@ -78,7 +81,9 @@ private:
 	float TimelineValue;
 	FTimeline MyTimeline;
 	int32 TileIndex;
+	FTimerHandle FallTimerHandle;
 
 	void SetupTimeline();
+	void TickTimeline();
 
 };

@@ -31,6 +31,7 @@ void ACaveInGameMode::SpawnFinalBlock()
     FinalBlockRef->SetIndestructible(false);
     FinalBlockRef->SetIsFinalBlock(true);
     FinalBlockRef->SetActorScale3D(FVector(2, 2, 2));
+    FinalBlockRef->StartFalling();
     // Start our tile generation
     GetWorldTimerManager().SetTimer(TileTimerHandle, this, &ACaveInGameMode::StartShake, 3, false);
 }
@@ -155,6 +156,7 @@ bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag)
         NewTile->SetIndestructible(Indestructible);
         NewTile->SetIsBombBlock(IsBomb);
         NewTile->SetIsFinalBlock(false);
+        NewTile->StartFalling();
         Tiles[Index] = NewTile;
         NumFilledTiles++;
         return true;

@@ -7,11 +7,12 @@
 #include "Curves/CurveFloat.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "TimerManager.h"
 
 ACaveTile::ACaveTile()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	Falling = true;
+	PrimaryActorTick.bCanEverTick = false;
+	Falling = false;
 	Indestructible = false;
 	BombBlock = false;
 
@@ -33,8 +34,6 @@ ACaveTile::ACaveTile()
 void ACaveTile::BeginPlay()
 {
 	Super::BeginPlay();
-	// Setup our falling timeline
-	SetupTimeline();
 }
 
 void ACaveTile::SetupTimeline() 
@@ -52,16 +51,16 @@ void ACaveTile::SetupTimeline()
 	MyTimeline.PlayFromStart();
 }
 
-void ACaveTile::Tick(float DeltaTime) 
+// Tick that runs on FallTimerHandle only while the CaveTile is falling
+void ACaveTile::TickTimeline() 
 {
-	// Tick our fall timeline if we're falling
 	if (Falling)
 	{
-		MyTimeline.TickTimeline(DeltaTime);
+		MyTimeline.TickTimeline(FallTimerFrequency);
 	}
-	if (FinalBlock) 
+	else
 	{
-		TextRenderer->SetText(FText::AsNumber(GetHealth() / 50.f));
+		GetWorldTimerManager().ClearTimer(FallTimerHandle);
 	}
 }
 
@@ -80,6 +79,14 @@ void ACaveTile::ControlFall()
 	}
 	FVector NewLocation = FVector(Location.X, Location.Y, CurveFloatValue);
 	SetActorLocation(NewLocation);
+}
+
+// Called when the tile is spawned to start the process of falling
+void ACaveTile::StartFalling() 
+{
+	SetupTimeline();
+	Falling = true;
+	GetWorldTimerManager().SetTimer(FallTimerHandle, this, &ACaveTile::TickTimeline, FallTimerFrequency, true);
 }
 
 // Called when the Timeline finished to reset our state
@@ -118,6 +125,7 @@ void ACaveTile::SetIsFinalBlock(bool Value)
 		HealthComponent->SetDefaultHealth(HealthComponent->GetDefaultHealth() * FinalBlockHealthMultiplier);
 		HealthComponent->SetHealth(HealthComponent->GetHealth() * FinalBlockHealthMultiplier);
 		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(FinalBlockMaterial));
+		UpdateDisplayedHealth(GetHealth());
 	}
 	else 
 	{
@@ -138,6 +146,11 @@ float ACaveTile::GetHealth() const
 void ACaveTile::SetHealth(float Health) 
 {
 	HealthComponent->SetHealth(Health);
+}
+
+void ACaveTile::UpdateDisplayedHealth(float Health) 
+{
+	TextRenderer->SetText(FText::AsNumber(Health / 50.f));
 }
 
 bool ACaveTile::IsDead() const

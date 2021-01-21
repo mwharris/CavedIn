@@ -67,10 +67,12 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, Category="Effects")
 	USoundBase* AttackSound;
+	UPROPERTY(EditAnywhere, Category="Attack")
+	float SwingTimerFrequency = 0.05f;
 
 	APlayerController* PlayerControllerRef;
 	ACaveInGameMode* GameModeRef;
-	FTimerHandle AttackTimer;
+	FTimerHandle SwingTimer;
 	bool CanAttack;
 	bool AttackHeld;
 	float CurveFloatValue;
@@ -86,5 +88,6 @@ private:
 	void RestartLevel();
 	void QuitGame();
 	void SetupTimeline();
+	void TickAttackTimeline();
 
 };

@@ -68,11 +68,6 @@ void ABaseCharacter::SetupTimeline()
 
 void ABaseCharacter::Tick(float DeltaTime) 
 {
-	// Tick our attack timeline if it's running
-	if (!CanAttack)
-	{
-		AttackTimeline.TickTimeline(DeltaTime);
-	}
 	// Perform a raycast under our mouse to find our mouse location in the world
 	if (PlayerControllerRef) 
 	{
@@ -84,6 +79,33 @@ void ABaseCharacter::Tick(float DeltaTime)
 	}
 	// Tick our Attack if we're currently attacking
 	Attack();
+}
+
+void ABaseCharacter::Attack() 
+{
+	if (!CanAttack || !AttackHeld) { return; }
+	CanAttack = false;
+	// Start the attack animation timeline
+	AttackTimeline.PlayFromStart();
+	GetWorldTimerManager().SetTimer(SwingTimer, this, &ABaseCharacter::TickAttackTimeline, SwingTimerFrequency, true);
+	// Make sure we get a reference to our owner
+	AActor* MyOwner = GetOwner();
+	if (!MyOwner)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Attack: No Owner Found!"));
+		return;
+	}
+	// Do a simple raycast attack forward for now
+	FVector Start = GetActorLocation();
+	FVector End = GetActorLocation() + (GetActorForwardVector() * AttackDistance);
+	FHitResult OutHit;
+	bool Success = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
+	if (Success && OutHit.GetActor() != NULL && OutHit.GetActor() != this)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SparksSystem, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
+		UGameplayStatics::SpawnSoundAtLocation(this, AttackSound, GetActorLocation());
+		UGameplayStatics::ApplyDamage(OutHit.GetActor(), AttackDamage, MyOwner->GetInstigatorController(), this, DamageType);
+	}
 }
 
 void ABaseCharacter::MoveUp(float AxisValue) 
@@ -107,35 +129,9 @@ void ABaseCharacter::Rotate(FVector LookAtTarget)
 	PlayerControllerRef->SetControlRotation(Rotator);
 }
 
-void ABaseCharacter::Attack() 
-{
-	if (!CanAttack || !AttackHeld) { return; }
-	CanAttack = false;
-	// Start the attack animation timeline
-	AttackTimeline.PlayFromStart();
-	// Make sure we get a reference to our owner
-	AActor* MyOwner = GetOwner();
-	if (!MyOwner)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Attack: No Owner Found!"));
-		return;
-	}
-	// Do a simple raycast attack forward for now
-	FVector Start = GetActorLocation();
-	FVector End = GetActorLocation() + (GetActorForwardVector() * AttackDistance);
-	FHitResult OutHit;
-	bool Success = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility);
-	if (Success && OutHit.GetActor() != NULL && OutHit.GetActor() != this)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SparksSystem, OutHit.ImpactPoint, OutHit.ImpactNormal.Rotation());
-		UGameplayStatics::SpawnSoundAtLocation(this, AttackSound, GetActorLocation());
-		UGameplayStatics::ApplyDamage(OutHit.GetActor(), AttackDamage, MyOwner->GetInstigatorController(), this, DamageType);
-	}
-}
-
+// Destroy any Cave Tiles that fall on our heads 
 void ABaseCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) 
 {
-	// Destroy any Cave Tiles that fall on our heads 
 	ACaveTile* Tile = Cast<ACaveTile>(OtherActor);
 	if (OtherActor && OtherActor != this && Tile)
 	{
@@ -161,6 +157,18 @@ void ABaseCharacter::ApplyDamageToFinalBlock(ACaveTile* FinalBlock)
 			UGameplayStatics::SpawnEmitterAtLocation(this, ExplosionParticle, FinalBlock->ExplosionPoint->GetComponentLocation());
 		}
 		UGameplayStatics::ApplyDamage(FinalBlock, BombDamage, MyOwner->GetInstigatorController(), this, DamageType);
+	}
+}
+
+void ABaseCharacter::TickAttackTimeline() 
+{
+	if (!CanAttack)
+	{
+		AttackTimeline.TickTimeline(SwingTimerFrequency);
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(SwingTimer);
 	}
 }
 
