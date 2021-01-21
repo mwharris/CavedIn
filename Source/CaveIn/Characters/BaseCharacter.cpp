@@ -68,17 +68,11 @@ void ABaseCharacter::SetupTimeline()
 
 void ABaseCharacter::Tick(float DeltaTime) 
 {
-	// Perform a raycast under our mouse to find our mouse location in the world
-	if (PlayerControllerRef) 
-	{
-		FHitResult TraceHitResult;
-		PlayerControllerRef->GetHitResultUnderCursor(ECC_Visibility, false, TraceHitResult);
-		FVector HitLocation = TraceHitResult.ImpactPoint;
-		// Rotate the player towards this location
-		Rotate(HitLocation);
-	}
-	// Tick our Attack if we're currently attacking
-	Attack();
+	Super::Tick(DeltaTime);
+	FHitResult TraceHitResult;
+	PlayerControllerRef->GetHitResultUnderCursor(ECC_Visibility, false, TraceHitResult);
+	FVector HitLocation = TraceHitResult.ImpactPoint;
+	Rotate(HitLocation);
 }
 
 void ABaseCharacter::Attack() 
@@ -166,6 +160,10 @@ void ABaseCharacter::TickAttackTimeline()
 	{
 		AttackTimeline.TickTimeline(SwingTimerFrequency);
 	}
+	else if (AttackHeld)
+	{
+		Attack();
+	}
 	else
 	{
 		GetWorldTimerManager().ClearTimer(SwingTimer);
@@ -193,6 +191,7 @@ void ABaseCharacter::SetAttackState()
 void ABaseCharacter::AttackPressed()
 {
 	AttackHeld = true;
+	Attack();
 }
 
 void ABaseCharacter::AttackReleased() 

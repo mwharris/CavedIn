@@ -46,7 +46,6 @@ public:
 	UPROPERTY(EditAnywhere, Category="Effects")
 	UNiagaraSystem* SparksSystem;
 
-
 	UFUNCTION()
 	void ControlAttack();
 	UFUNCTION()
