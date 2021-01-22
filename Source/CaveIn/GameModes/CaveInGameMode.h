@@ -7,6 +7,7 @@
 class ACaveTile;
 class ABaseCharacter;
 class UAudioComponent;
+class UObjectPool;
 
 UCLASS()
 class CAVEIN_API ACaveInGameMode : public AGameModeBase
@@ -22,6 +23,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool GetIsGameOver() const;
 
+	ACaveInGameMode();
 	void ActorDied(AActor* DeadActor);
 	void HandleGameOver(bool PlayerWon);
 	void StartGame();
@@ -67,6 +69,7 @@ private:
 	TArray<ACaveTile*> Tiles;
 	ACaveTile* FinalBlockRef;
 	ABaseCharacter* PlayerRef;
+	UObjectPool* ObjectPooler;
 	int32 NumFilledTiles;
 	FTimerHandle TileTimerHandle;
 	bool IsGameOver;

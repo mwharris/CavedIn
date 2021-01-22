@@ -1,10 +1,16 @@
 #include "CaveInGameMode.h"
 #include "CaveIn/Actors/CaveTile.h"
+#include "CaveIn/ActorComponents/ObjectPool.h"
 #include "CaveIn/Characters/BaseCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+
+ACaveInGameMode::ACaveInGameMode() 
+{
+    ObjectPooler = CreateDefaultSubobject<UObjectPool>(TEXT("Object Pooler"));
+}
 
 void ACaveInGameMode::BeginPlay() 
 {
@@ -26,6 +32,7 @@ void ACaveInGameMode::BeginPlay()
 // TODO: Fix this up to use GetWorld()->SpawnActor<>() properly
 void ACaveInGameMode::SpawnFinalBlock() 
 {
+    ObjectPooler->DoSomething();
     FActorSpawnParameters params;
     FinalBlockRef = GetWorld()->SpawnActor<ACaveTile>(TileClass, FinalBlockLocation, FRotator::ZeroRotator, params);
     FinalBlockRef->SetIndestructible(false);

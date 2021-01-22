@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CaveIn/Actors/PooledActor.h"
 #include "Components/TimelineComponent.h"
 #include "CaveTile.generated.h"
 
@@ -13,7 +14,7 @@ class UTextRenderComponent;
 class USceneComponent;
 
 UCLASS()
-class CAVEIN_API ACaveTile : public AActor
+class CAVEIN_API ACaveTile : public APooledActor
 {
 	GENERATED_BODY()
 	
