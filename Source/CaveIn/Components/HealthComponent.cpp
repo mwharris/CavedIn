@@ -21,11 +21,25 @@ void UHealthComponent::BeginPlay()
 
 void UHealthComponent::TakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser) 
 {
+	UE_LOG(LogTemp, Warning, TEXT("Took Damage..."));
+	if (Indestructible)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("...but I'm indestructible"));
+	}
+	if (Damage == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("...but damage is 0"));
+	}
+	if (Health <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("...but health is 0"));
+	}
 	if (Indestructible || Damage == 0 || Health <= 0) 
 	{
 		return;
 	}
 	Health -= Damage;
+	UE_LOG(LogTemp, Warning, TEXT("Damage: %f,  Health After: %f"), Damage, Health);
 	if (Health <= 0)
 	{
 		GameModeRef->ActorDied(GetOwner());

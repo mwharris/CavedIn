@@ -17,6 +17,8 @@ class CAVEIN_API ACaveInGameMode : public AGameModeBase
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling")
 	float SpawnHeight = 1000;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UObjectPool* ObjectPooler;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool DidPlayerWin() const;
@@ -37,9 +39,9 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ACaveTile> TileClass;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	int32 NumTilesX = 10;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Tiling", meta = (AllowPrivateAccess = "true"))
 	int32 NumTilesY = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Final", meta = (AllowPrivateAccess = "true"))
 	FVector FinalBlockLocation;
@@ -69,7 +71,6 @@ private:
 	TArray<ACaveTile*> Tiles;
 	ACaveTile* FinalBlockRef;
 	ABaseCharacter* PlayerRef;
-	UObjectPool* ObjectPooler;
 	int32 NumFilledTiles;
 	FTimerHandle TileTimerHandle;
 	bool IsGameOver;

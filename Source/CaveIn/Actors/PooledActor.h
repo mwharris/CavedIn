@@ -13,11 +13,15 @@ public:
 	APooledActor();
 	void SetActive(bool NewValue);
 	bool IsActive();
+	
+	virtual void Reset() 
+	{
+		SetActive(false);
+	};
 
 protected:
 	bool Active = false;
 
 	virtual void BeginPlay() override;
-	void Deactivate();
 
 };

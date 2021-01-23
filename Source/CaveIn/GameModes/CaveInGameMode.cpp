@@ -1,5 +1,6 @@
 #include "CaveInGameMode.h"
 #include "CaveIn/Actors/CaveTile.h"
+#include "CaveIn/Actors/PooledActor.h"
 #include "CaveIn/ActorComponents/ObjectPool.h"
 #include "CaveIn/Characters/BaseCharacter.h"
 #include "Components/AudioComponent.h"
@@ -14,25 +15,22 @@ ACaveInGameMode::ACaveInGameMode()
 
 void ACaveInGameMode::BeginPlay() 
 {
-    if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "Level1") 
-    {
-        NumFilledTiles = 0;
-        PlayerWin = false;
-        IsGameOver = false;
-        MiddleToEndFilled = false;
-        // Initialize Tiles with nullptrs
-        Tiles.Init(nullptr, NumTilesY * NumTilesX);
-        // Get a reference to our player character
-        PlayerRef = Cast<ABaseCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-        // Spawn our final block with a delay
-        GetWorldTimerManager().SetTimer(ExitSpawnTimerHandle, this, &ACaveInGameMode::SpawnFinalBlock, FinalBlockSpawnDelay, false);
-    }
+    Super::BeginPlay();
+    NumFilledTiles = 0;
+    PlayerWin = false;
+    IsGameOver = false;
+    MiddleToEndFilled = false;
+    // Initialize Tiles with nullptrs
+    Tiles.Init(nullptr, NumTilesY * NumTilesX);
+    // Get a reference to our player character
+    PlayerRef = Cast<ABaseCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    // Spawn our final block with a delay
+    GetWorldTimerManager().SetTimer(ExitSpawnTimerHandle, this, &ACaveInGameMode::SpawnFinalBlock, FinalBlockSpawnDelay, false);
 }
 
 // TODO: Fix this up to use GetWorld()->SpawnActor<>() properly
 void ACaveInGameMode::SpawnFinalBlock() 
 {
-    ObjectPooler->DoSomething();
     FActorSpawnParameters params;
     FinalBlockRef = GetWorld()->SpawnActor<ACaveTile>(TileClass, FinalBlockLocation, FRotator::ZeroRotator, params);
     FinalBlockRef->SetIndestructible(false);
@@ -143,8 +141,9 @@ bool ACaveInGameMode::BruteForceSpawn()
 // Attempt to spawn a tile at a given X and Y location
 bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag) 
 {
+    // Convert X and Y position to array index
     int32 Index = GetIndex(X, Y);
-    // Randomly make certain tiles indestructible
+    // Determine if this tile should be indestructible, a bomb, or normal
     bool Indestructible = false;
     bool IsBomb = false;
     if (Index != 4 && Index != 5) 
@@ -156,17 +155,35 @@ bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag)
     // Actually create the tile and update Tiles array
     if (Tiles[Index] == nullptr)
     {
-        FActorSpawnParameters params;
-        FVector Location = FVector(X * 200, Y * 200, SpawnHeight);
-        FRotator Rotation = FRotator::ZeroRotator;
-        ACaveTile* NewTile = GetWorld()->SpawnActor<ACaveTile>(TileClass, Location, Rotation, params);
-        NewTile->SetIndestructible(Indestructible);
-        NewTile->SetIsBombBlock(IsBomb);
-        NewTile->SetIsFinalBlock(false);
-        NewTile->StartFalling();
-        Tiles[Index] = NewTile;
-        NumFilledTiles++;
-        return true;
+        APooledActor* PooledActor = ObjectPooler->GetPooledObject();
+        if (PooledActor == nullptr) 
+        {
+            UE_LOG(LogTemp, Error, TEXT("Cannot spawn tile!"));
+            return false;
+        }
+        else if (ACaveTile* NewTile = Cast<ACaveTile>(PooledActor))
+        {
+            if (Indestructible && IsBomb) 
+            {
+                UE_LOG(LogTemp, Error, TEXT("Created an indestructible bomb!"));
+            }
+            NewTile->SetActorLocation(FVector(X * 200, Y * 200, SpawnHeight));
+            NewTile->SetActorRotation(FRotator::ZeroRotator);
+            NewTile->SetActorEnableCollision(true);
+            NewTile->SetActive(true);
+            NewTile->SetIndestructible(Indestructible);
+            NewTile->SetIsBombBlock(IsBomb);
+            NewTile->SetIsFinalBlock(false);
+            NewTile->StartFalling();
+            Tiles[Index] = NewTile;
+            NumFilledTiles++;
+            return true;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Could not cast PooledActor to CaveTile!"));
+            return false;
+        }
     }
     return false;
 }
@@ -179,7 +196,7 @@ void ACaveInGameMode::ActorDied(AActor* DeadActor)
         if (DestroyedTile->GetIsFinalBlock()) 
         {
             FinalBlockRef = nullptr;
-            DestroyedTile->HandleDestruction();
+            DestroyedTile->Reset();
         }
         else
         {
@@ -201,8 +218,8 @@ void ACaveInGameMode::ActorDied(AActor* DeadActor)
                 UGameplayStatics::SpawnSoundAtLocation(this, ExplosionSound, DestroyedTile->GetActorLocation());
                 PlayerRef->ApplyDamageToFinalBlock(FinalBlockRef);
             }
-            // Call tile-specific destruction logic
-            DestroyedTile->HandleDestruction();
+            // Reset the Tile's flags
+            DestroyedTile->Reset();
         }
     }
 }

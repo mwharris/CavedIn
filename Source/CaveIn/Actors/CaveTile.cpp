@@ -96,14 +96,28 @@ void ACaveTile::SetFallState()
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), SlamSound, GetActorLocation(), 0.5f);
 }
 
+void ACaveTile::Reset() 
+{
+	FinalBlock = false;
+	Indestructible = false;
+	BombBlock = false;
+	Falling = false;
+	StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(BaseMaterial));
+	SetHealth(HealthComponent->GetDefaultHealth());
+	Super::SetActive(false);
+}
+
 void ACaveTile::SetIndestructible(bool Value) 
 {
 	Indestructible = Value;
 	if (Indestructible) 
 	{
-		TextRenderer->DestroyComponent();
 		HealthComponent->SetIndestructible(true);
 		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(IndestructibleMaterial));
+		if (TextRenderer != nullptr) 
+		{
+			TextRenderer->DestroyComponent();
+		}
 	}
 }
 
@@ -112,8 +126,11 @@ void ACaveTile::SetIsBombBlock(bool Value)
 	BombBlock = Value;
 	if (BombBlock)
 	{
-		TextRenderer->DestroyComponent();
 		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(BombBlockMaterial));
+		if (TextRenderer != nullptr) 
+		{
+			TextRenderer->DestroyComponent();
+		}
 	}
 }
 
@@ -126,16 +143,12 @@ void ACaveTile::SetIsFinalBlock(bool Value)
 		HealthComponent->SetHealth(HealthComponent->GetHealth() * FinalBlockHealthMultiplier);
 		StaticMesh->SetMaterial(0, Cast<UMaterialInterface>(FinalBlockMaterial));
 		UpdateDisplayedHealth(GetHealth());
+		Super::SetActive(true);
 	}
-	else 
+	else if (TextRenderer != nullptr)
 	{
 		TextRenderer->DestroyComponent();
 	}
-}
-
-void ACaveTile::HandleDestruction() 
-{
-	Destroy();
 }
 
 float ACaveTile::GetHealth() const

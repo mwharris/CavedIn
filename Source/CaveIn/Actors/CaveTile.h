@@ -30,6 +30,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UTextRenderComponent* TextRenderer;
 	UPROPERTY(EditAnywhere, Category="Tile Materials")
+	UMaterial* BaseMaterial;
+	UPROPERTY(EditAnywhere, Category="Tile Materials")
 	UMaterial* IndestructibleMaterial;
 	UPROPERTY(EditAnywhere, Category="Tile Materials")
 	UMaterial* FinalBlockMaterial;
@@ -48,13 +50,12 @@ public:
 	void SetFallState();
 
 	ACaveTile();
-	void HandleDestruction();
-	
 	void SetIsFinalBlock(bool Value);
 	void SetIndestructible(bool Value);
 	void SetIsBombBlock(bool Value);
 	void StartFalling();
 	void UpdateDisplayedHealth(float Health);
+	virtual void Reset() override;
 
 	// GETTERS AND SETTERS
 	bool GetIsFinalBlock() const;

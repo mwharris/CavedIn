@@ -3,7 +3,6 @@
 APooledActor::APooledActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
 	SetActorEnableCollision(false);
 }
 
@@ -21,4 +20,5 @@ void APooledActor::SetActive(bool NewValue)
 {
 	Active = NewValue;
 	SetActorHiddenInGame(!Active);
+	SetActorEnableCollision(Active);	
 }
