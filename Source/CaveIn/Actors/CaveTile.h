@@ -50,6 +50,7 @@ public:
 	void SetFallState();
 
 	ACaveTile();
+	void InitTile(FVector Location, FRotator Rotation, bool bIndestructible, bool bIsBomb, bool bFinalBlock);
 	void SetIsFinalBlock(bool Value);
 	void SetIndestructible(bool Value);
 	void SetIsBombBlock(bool Value);

@@ -163,18 +163,7 @@ bool ACaveInGameMode::SpawnTile(int32 X, int32 Y, bool BruteForceFlag)
         }
         else if (ACaveTile* NewTile = Cast<ACaveTile>(PooledActor))
         {
-            if (Indestructible && IsBomb) 
-            {
-                UE_LOG(LogTemp, Error, TEXT("Created an indestructible bomb!"));
-            }
-            NewTile->SetActorLocation(FVector(X * 200, Y * 200, SpawnHeight));
-            NewTile->SetActorRotation(FRotator::ZeroRotator);
-            NewTile->SetActorEnableCollision(true);
-            NewTile->SetActive(true);
-            NewTile->SetIndestructible(Indestructible);
-            NewTile->SetIsBombBlock(IsBomb);
-            NewTile->SetIsFinalBlock(false);
-            NewTile->StartFalling();
+            NewTile->InitTile(FVector(X * 200, Y * 200, SpawnHeight), FRotator::ZeroRotator, Indestructible, IsBomb, false);
             Tiles[Index] = NewTile;
             NumFilledTiles++;
             return true;

@@ -36,6 +36,18 @@ void ACaveTile::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ACaveTile::InitTile(FVector Location, FRotator Rotation, bool bIndestructible, bool bIsBomb, bool bFinalBlock) 
+{
+	SetActorLocation(Location);
+	SetActorRotation(Rotation);
+	SetActorEnableCollision(true);
+	SetActive(true);
+	SetIndestructible(bIndestructible);
+	SetIsBombBlock(bIsBomb);
+	SetIsFinalBlock(bFinalBlock);
+	StartFalling();
+}
+
 void ACaveTile::SetupTimeline() 
 {
 	// Timeline will call this function when it's running

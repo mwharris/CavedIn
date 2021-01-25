@@ -21,7 +21,7 @@ public:
 
 protected:
 	bool Active = false;
-
+	
 	virtual void BeginPlay() override;
 
 };

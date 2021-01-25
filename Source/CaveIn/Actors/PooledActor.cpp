@@ -11,14 +11,14 @@ void APooledActor::BeginPlay()
 	Super::BeginPlay();
 }
 
-bool APooledActor::IsActive() 
-{
-	return Active;
-}
-
 void APooledActor::SetActive(bool NewValue) 
 {
 	Active = NewValue;
 	SetActorHiddenInGame(!Active);
 	SetActorEnableCollision(Active);	
+}
+
+bool APooledActor::IsActive() 
+{
+	return Active;
 }
