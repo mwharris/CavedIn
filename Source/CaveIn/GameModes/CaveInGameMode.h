@@ -69,13 +69,12 @@ private:
 	FTimerHandle ExitSpawnTimerHandle;
 
 	TArray<ACaveTile*> Tiles;
+	TArray<FVector2D> EmptyTiles;
 	ACaveTile* FinalBlockRef;
 	ABaseCharacter* PlayerRef;
-	int32 NumFilledTiles;
 	FTimerHandle TileTimerHandle;
 	bool IsGameOver;
 	bool PlayerWin;
-	bool MiddleToEndFilled;
 
 	void SpawnFinalBlock();
 	void StartShake();
@@ -83,5 +82,6 @@ private:
 	bool BruteForceSpawn();
 	bool SpawnTile(int32 X, int32 Y, bool BruteForceFlag);
 	int32 GetIndex(int32 X, int32 Y) const;
+	int32 GetArrayIndex(int32 Index) const;
 
 };
